@@ -10,7 +10,6 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            /* Fondo Kame House */
             background-image: url('image_c3c160.png'); 
             background-size: cover; 
             background-position: center; 
@@ -29,12 +28,11 @@
             letter-spacing: 2px;
             text-shadow: 3px 3px 0px #000000, 5px 5px 0px #D92318;
         }
-        /* NUEVO ESTILO PARA EL TEXTO DE ABAJO */
         h2 {
             color: #FFE779; 
-            margin-top: 25px; /* Le da un espacio debajo de la foto */
+            margin-top: 25px; 
             text-align: center;
-            font-size: 30px; /* Un poco más pequeño que el título de arriba */
+            font-size: 30px; 
             text-transform: uppercase;
             letter-spacing: 2px;
             text-shadow: 3px 3px 0px #000000, 5px 5px 0px #D92318;
@@ -46,12 +44,26 @@
             box-shadow: 0 15px 40px rgba(0,0,0,0.8); 
             border-radius: 12px;
             overflow: hidden;
-            background-image: url('image_366ad.png'); 
-            background-size: cover;
-            background-position: center;
+            /* El fondo ahora es negro para dar misterio */
             background-color: #000000; 
             border: 4px solid #002244; 
         }
+        
+        /* NUEVO: La capa de la foto que estará totalmente invisible al inicio */
+        #foto-revelada {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('image_366ad.png'); 
+            background-size: cover;
+            background-position: center;
+            opacity: 0; /* 0 significa invisible */
+            transition: opacity 2.5s ease-in-out; /* Efecto mágico de 2.5 segundos */
+            z-index: 1; /* Está al fondo */
+        }
+
         .cuadro {
             position: absolute;
             background: radial-gradient(circle, #FFE779 10%, #E85D04 90%);
@@ -59,6 +71,7 @@
             box-sizing: border-box;
             border-radius: 4px;
             transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 2; /* Las esferas están por encima de la foto */
         }
         
         .activo {
@@ -94,10 +107,11 @@
     <h1>Nuestra Familia</h1>
     
     <div id="contenedor-regalo">
-        <!-- Los cuadros se generarán aquí -->
+        <!-- Aquí está la foto esperando su turno -->
+        <div id="foto-revelada"></div>
+        <!-- Los cuadros se generarán encima -->
     </div>
 
-    <!-- AQUÍ ESTÁ EL TEXTO NUEVO -->
     <h2>Feliz Cumpleaños Chucky</h2>
 
     <!-- Música de fondo -->
@@ -107,6 +121,9 @@
         const contenedor = document.getElementById('contenedor-regalo');
         const musica = document.getElementById('musicaFondo');
         let musicaIniciada = false;
+        
+        // NUEVO: Variable para evitar el spam de clics
+        let enCooldown = false; 
         
         const filas = 5; 
         const columnas = 5;
@@ -143,9 +160,16 @@
                 cuadro.style.left = `${j * anchoCuadro}px`;
 
                 cuadro.addEventListener('click', function() {
+                    // Si está en cooldown por clics muy rápidos, no hace nada
+                    if (enCooldown) return; 
+
                     if (parseInt(this.dataset.fase) !== faseActual || this.classList.contains('oculto')) {
                         return;
                     }
+
+                    // Activa un bloqueo de 0.4 segundos para que no puedan espamear
+                    enCooldown = true;
+                    setTimeout(() => { enCooldown = false; }, 400);
 
                     this.classList.remove('activo', 'inactivo');
                     this.classList.add('oculto');
@@ -157,15 +181,23 @@
 
                     cuadrosPorFase[faseActual]--;
 
+                    // Revisa si ya no quedan cuadros en esta fase
                     if (cuadrosPorFase[faseActual] === 0) {
-                        faseActual++;
-                        const todosLosCuadros = document.querySelectorAll('.cuadro');
-                        todosLosCuadros.forEach(c => {
-                            if (parseInt(c.dataset.fase) === faseActual) {
-                                c.classList.remove('inactivo');
-                                c.classList.add('activo');
-                            }
-                        });
+                        if (faseActual === 3) {
+                            // ¡MAGIA FINAL! Se rompió el último cuadro, revela la foto
+                            setTimeout(() => {
+                                document.getElementById('foto-revelada').style.opacity = 1;
+                            }, 300); // Espera un instante dramático antes de aparecer
+                        } else {
+                            faseActual++;
+                            const todosLosCuadros = document.querySelectorAll('.cuadro');
+                            todosLosCuadros.forEach(c => {
+                                if (parseInt(c.dataset.fase) === faseActual) {
+                                    c.classList.remove('inactivo');
+                                    c.classList.add('activo');
+                                }
+                            });
+                        }
                     }
                 });
 
